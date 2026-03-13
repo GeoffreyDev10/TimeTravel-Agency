@@ -5,7 +5,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.OPENROUTER_API_KEY;
+
+if (!API_KEY) {
+  console.error("OPENROUTER_API_KEY manquante dans les variables d'environnement.");
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -21,9 +27,8 @@ app.post("/chat", async (req, res) => {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5500",
         "X-Title": "TimeTravel Agency"
       },
       body: JSON.stringify({
@@ -49,6 +54,7 @@ Ton ton :
 - crédible dans un univers fictif premium
 
 Tu connais parfaitement :
+
 1. Paris 1889
    - Belle Époque
    - Exposition Universelle
@@ -67,14 +73,12 @@ Tu connais parfaitement :
    - expédition spectaculaire
    - aventure intense
 
-Consignes de réponse :
+Consignes :
 - réponds en français
-- sois clair et assez court
-- maximum 5 à 6 phrases
-- reste dans l'univers TimeTravel Agency
-- tu peux inventer des prix cohérents si on te le demande
-- ne dis jamais que tu es une IA générique
-- si l'utilisateur hésite, recommande une destination avec une justification
+- réponses courtes (5 phrases max)
+- reste immersif
+- ne dis jamais que tu es une IA
+- recommande une destination si l'utilisateur hésite
 `
           },
           ...history,
@@ -89,24 +93,27 @@ Consignes de réponse :
     const data = await response.json();
 
     if (!response.ok) {
-      console.error(data);
+      console.error("Erreur OpenRouter:", data);
       return res.status(500).json({
-        error: "Erreur API",
+        error: "Erreur API OpenRouter",
         details: data
       });
     }
 
-    const reply = data.choices?.[0]?.message?.content || "Une perturbation temporelle empêche ma réponse pour l'instant.";
+    const reply =
+      data.choices?.[0]?.message?.content ||
+      "Une perturbation temporelle empêche ma réponse pour l'instant.";
 
     res.json({ reply });
+
   } catch (error) {
-    console.error(error);
+    console.error("Erreur serveur :", error);
     res.status(500).json({
-      error: "Erreur serveur"
+      error: "Erreur serveur interne"
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Serveur chatbot lancé sur http://localhost:${PORT}`);
+  console.log(`Serveur chatbot actif sur le port ${PORT}`);
 });
