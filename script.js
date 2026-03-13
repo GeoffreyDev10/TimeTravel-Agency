@@ -291,7 +291,7 @@ async function sendChat() {
   addTypingIndicator();
 
   try {
-    const response = await fetch("https://timetravel-agency-chatbot.onrender.com", {
+    const response = await fetch("https://timetravel-agency-chatbot.onrender.com/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
